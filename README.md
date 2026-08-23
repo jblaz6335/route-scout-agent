@@ -77,3 +77,6 @@ without affecting unrelated workloads.
 All source in this repository was created during the contest period. The project
 uses public links to earlier Blaz Algo Systems work only as portfolio evidence;
 no source code from those projects is incorporated here.
+
+The working Devpost copy and four-minute demo outline are in
+[`docs/submission.md`](docs/submission.md).
