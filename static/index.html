@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Route Scout | Evidence-backed opportunity routing</title>
+  <meta name="description" content="Turn noisy bounties and hackathons into build-now, verify-first, or skip decisions backed by public evidence.">
+  <style>
+    :root{--bg:#07111f;--panel:#0d1b2d;--line:#233a55;--text:#eef6ff;--muted:#9db0c8;--cyan:#55e6d0;--blue:#4da3ff;--amber:#ffbd66;--red:#ff7b7b}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,#123053 0,transparent 38%),var(--bg);color:var(--text);font:16px/1.55 Inter,ui-sans-serif,system-ui,sans-serif}.shell{width:min(1120px,calc(100% - 32px));margin:auto}header{padding:72px 0 36px}.eyebrow{text-transform:uppercase;letter-spacing:.16em;color:var(--cyan);font-size:12px;font-weight:800}h1{font-size:clamp(44px,7vw,82px);line-height:.98;letter-spacing:-.055em;margin:14px 0 20px;max-width:900px}header p{max-width:760px;color:var(--muted);font-size:20px}.strip,.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.strip{margin:22px 0 52px}.stat,.card,.panel{background:linear-gradient(160deg,#12243a,var(--panel));border:1px solid var(--line);border-radius:16px;padding:22px}.stat b{display:block;font-size:22px}.stat span,.muted{color:var(--muted)}h2{font-size:32px;margin:0 0 8px}.panel{margin-bottom:30px}.form{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-top:20px}.form textarea{grid-column:1/-1;min-height:110px}.form input,.form textarea{width:100%;border:1px solid var(--line);background:#081523;color:var(--text);border-radius:10px;padding:13px;font:inherit}.button{border:0;border-radius:10px;padding:13px 18px;background:linear-gradient(135deg,var(--blue),#2875ef);color:#fff;font-weight:800;cursor:pointer}.button:disabled{cursor:wait;opacity:.6}.button.alt{background:transparent;border:1px solid var(--line)}.actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}.agent-output{margin-top:16px;padding:18px;background:#081523;border:1px solid var(--line);border-radius:12px;white-space:pre-wrap}.card{min-height:260px;display:flex;flex-direction:column}.score{font-size:48px;font-weight:900;letter-spacing:-.05em}.route{font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:900;color:var(--cyan)}.card[data-route="verify_first"] .route{color:var(--amber)}.card[data-route="skip"] .route{color:var(--red)}.card h3{font-size:20px;margin:8px 0}.card ul{padding-left:18px;color:var(--muted);font-size:14px}.evidence{margin-top:auto;font-size:13px;color:var(--cyan)}footer{padding:50px 0;color:var(--muted);font-size:13px}@media(max-width:760px){.strip,.grid,.form{grid-template-columns:1fr}.form textarea{grid-column:auto}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="eyebrow">Google ADK · Gemini 3.5 · Cloud-ready</div>
+      <h1>Stop collecting opportunities. Route them.</h1>
+      <p>Route Scout turns noisy bounties, hackathons, and contract listings into a ranked execution decision tied to real skills, public proof, deadline pressure, and hard blockers.</p>
+    </header>
+    <section class="strip" aria-label="Architecture summary">
+      <div class="stat"><b>Extract</b><span>requirements, money, timing, and gates</span></div>
+      <div class="stat"><b>Match</b><span>capabilities to public evidence</span></div>
+      <div class="stat"><b>Route</b><span>build now, verify first, or skip</span></div>
+    </section>
+    <section class="panel">
+      <div class="eyebrow">Live decision surface</div>
+      <h2>Score one route</h2>
+      <p class="muted">This interface uses the same deterministic scorer exposed to the Gemini agent as a tool.</p>
+      <form id="score-form" class="form">
+        <input id="title" required minlength="3" placeholder="Opportunity title">
+        <input id="prize" type="number" min="0" value="5000" placeholder="Prize USD">
+        <input id="days" type="number" min="0" value="14" placeholder="Days left">
+        <textarea id="summary" required minlength="20" placeholder="Paste the concrete requirements or a concise opportunity summary"></textarea>
+        <input id="requirements" placeholder="Skills, comma separated">
+        <button class="button" type="submit">Route opportunity</button>
+      </form>
+      <div class="actions">
+        <button class="button alt" id="demo" type="button">Run verified demo set</button>
+        <button class="button alt" id="ask-agent" type="button">Ask Gemini to explain</button>
+      </div>
+      <div id="agent-output" class="agent-output" aria-live="polite" hidden></div>
+    </section>
+    <section>
+      <div class="eyebrow">Decision ledger</div>
+      <h2>Evidence before enthusiasm</h2>
+      <div id="results" class="grid" aria-live="polite"></div>
+    </section>
+  </main>
+  <footer class="shell">Route Scout records decisions, not applications. External actions remain outside the agent boundary.</footer>
+  <script>
+    const results=document.querySelector('#results');
+    const titleInput=document.querySelector('#title');
+    const summaryInput=document.querySelector('#summary');
+    const requirementsInput=document.querySelector('#requirements');
+    const prizeInput=document.querySelector('#prize');
+    const daysInput=document.querySelector('#days');
+    const agentButton=document.querySelector('#ask-agent');
+    const agentOutput=document.querySelector('#agent-output');
+    let lastPayload=null;
+    const escapeHtml=(v)=>String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    function card(title,r){
+      const evidence=(r.evidence||[]).map(e=>`<a href="${escapeHtml(e.url)}" target="_blank" rel="noopener">${escapeHtml(e.label)}</a>`).join(' · ')||'No matching public proof';
+      return `<article class="card" data-route="${escapeHtml(r.route)}"><div class="route">${escapeHtml(r.route.replace('_',' '))}</div><div class="score">${r.score}</div><h3>${escapeHtml(title)}</h3><ul>${r.reasons.slice(0,3).map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul><div class="evidence">${evidence}</div></article>`;
+    }
+    document.querySelector('#score-form').addEventListener('submit',async(event)=>{
+      event.preventDefault();
+      const payload={title:titleInput.value,summary:summaryInput.value,requirements:requirementsInput.value.split(',').map(x=>x.trim()).filter(Boolean),prize_usd:Number(prizeInput.value||0),days_remaining:Number(daysInput.value||0)};
+      const response=await fetch('/api/score',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+      const data=await response.json();
+      lastPayload=payload;
+      results.innerHTML=card(payload.title,data);
+    });
+    document.querySelector('#demo').addEventListener('click',async()=>{
+      const data=await (await fetch('/api/demo')).json();
+      results.innerHTML=data.map(x=>card(x.opportunity.title,x.recommendation)).join('');
+    });
+    agentButton.addEventListener('click',async()=>{
+      if(!lastPayload){agentOutput.hidden=false;agentOutput.textContent='Score an opportunity first so Gemini has a concrete route to inspect.';return;}
+      agentButton.disabled=true;
+      agentOutput.hidden=false;
+      agentOutput.textContent='Gemini is checking proof, constraints, and next actions...';
+      const prompt=`Evaluate this opportunity and explain the route: ${JSON.stringify(lastPayload)}`;
+      try{
+        const response=await fetch('/api/agent',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({prompt})});
+        const data=await response.json();
+        agentOutput.textContent=response.ok?data.response:(data.detail||'The agent could not complete this route.');
+      }catch(error){agentOutput.textContent='The agent endpoint is temporarily unavailable.';}
+      finally{agentButton.disabled=false;}
+    });
+    document.querySelector('#demo').click();
+  </script>
+</body>
+</html>

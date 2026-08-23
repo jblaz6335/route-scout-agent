@@ -1,0 +1,6 @@
+fastapi==0.141.1
+google-adk==2.7.1
+google-cloud-firestore==2.21.0
+httpx==0.28.1
+pydantic==2.12.5
+uvicorn[standard]==0.35.0

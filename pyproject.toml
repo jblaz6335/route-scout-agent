@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "route-scout-agent"
+version = "0.1.0"
+description = "A Google ADK agent that turns noisy opportunity pages into evidence-backed execution routes."
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "fastapi==0.141.1",
+  "google-adk==2.7.1",
+  "google-cloud-firestore==2.21.0",
+  "httpx==0.28.1",
+  "pydantic==2.12.5",
+  "uvicorn[standard]==0.35.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==8.4.1",
+  "pytest-cov==6.2.1",
+  "ruff==0.12.8",
+]
+
+[tool.setuptools.packages.find]
+include = ["route_scout*"]
+
+[tool.pytest.ini_options]
+addopts = "-q --cov=route_scout --cov-branch --cov-report=term-missing"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
