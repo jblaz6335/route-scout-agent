@@ -11,6 +11,10 @@ route before the deadline.
 
 ![Route Scout architecture](docs/architecture.svg)
 
+## Scope within the portfolio
+
+Route Scout focuses on selecting an execution route against an operator's existing proof inventory. [Revenue Sentinel](https://github.com/jblaz6335/revenue-sentinel) focuses on evidence gates, expected-value ranking, and digest-addressed audit records. They explore related opportunity-triage problems through separate implementations.
+
 ## Required stack
 
 - Gemini 3.5 Flash (`gemini-3.5-flash`)
